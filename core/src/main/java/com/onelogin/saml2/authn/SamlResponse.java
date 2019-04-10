@@ -1145,7 +1145,11 @@ public class SamlResponse {
 				if (destinationUrl.isEmpty()) {
 					throw new ValidationError("The response has an empty Destination value", ValidationError.EMPTY_DESTINATION);
 				} else if (!destinationUrl.equals(currentUrl)) {
-					throw new ValidationError("The response was received at " + currentUrl + " instead of " + destinationUrl, ValidationError.WRONG_DESTINATION);
+					
+					LOGGER.warn("The response was received at {0} instead of {1}. Ignoring this destination mismatch...", currentUrl, destinationUrl);
+					
+					//TODO: Please add  appropriate condition as well as add one parameter for ignoring destination hostname as well as port. 
+					//throw new ValidationError("The response was received at " + currentUrl + " instead of " + destinationUrl, ValidationError.WRONG_DESTINATION);
 				}
 			}
 		}
