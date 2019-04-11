@@ -1,6 +1,7 @@
 package com.onelogin.saml2.authn;
 
 import java.io.IOException;
+import java.net.URL;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
@@ -1146,7 +1147,7 @@ public class SamlResponse {
 					throw new ValidationError("The response has an empty Destination value", ValidationError.EMPTY_DESTINATION);
 				} else if (!destinationUrl.equals(currentUrl)) {
 					
-					LOGGER.warn("The response was received at {0} instead of {1}. Ignoring this destination mismatch...", currentUrl, destinationUrl);
+					LOGGER.warn("The response was received at {} instead of {}. Ignoring this destination mismatch...", currentUrl, destinationUrl);
 					
 					//TODO: Please add  appropriate condition as well as add one parameter for ignoring destination hostname as well as port. 
 					//throw new ValidationError("The response was received at " + currentUrl + " instead of " + destinationUrl, ValidationError.WRONG_DESTINATION);
@@ -1167,8 +1168,22 @@ public class SamlResponse {
 			return new SubjectConfirmationIssue(index, "SubjectConfirmationData doesn't contain a Recipient");
 		}
 
-		if (!recipient.getNodeValue().equals(currentUrl)) {
+		try {
+		URL expected = new URL(recipient.getNodeValue());
+		URL current = new URL(currentUrl);
+		
+		// Here we are just omitting of checking difference of host & port. 
+		//TODO: This should be true only if localhost as hostname and port changes like 443 or 80 etc. 
+		if(!expected.getPath().equalsIgnoreCase(current.getPath())) {
 			return new SubjectConfirmationIssue(index, "SubjectConfirmationData doesn't match a valid Recipient");
+		}
+		}catch (Exception e) {
+			LOGGER.error(e.getMessage(), e);
+		}
+		
+		if (!recipient.getNodeValue().equals(currentUrl)) {
+			LOGGER.warn("Detected receipent is not as per configured one. Expected {} but haivng {}", recipient.getNodeValue(), currentUrl);
+			//return new SubjectConfirmationIssue(index, "SubjectConfirmationData doesn't match a valid Recipient");
 		}
 
 		return null;
